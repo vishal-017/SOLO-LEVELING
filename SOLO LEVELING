@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Solo Leveling Workout Tracker</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      color: white;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    .overlay {
+      background: rgba(0, 0, 0, 0.75);
+      padding: 2rem;
+      height: 100vh;
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+    }
+    h1, h2 {
+      text-align: center;
+    }
+    .input-section, .stats-section, .days-section, .exercise-list {
+      max-width: 600px;
+      margin: auto;
+      margin-top: 2rem;
+      padding: 1rem;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+    }
+    button {
+      display: block;
+      margin: 1rem auto;
+      padding: 0.7rem 2rem;
+      background: #5c00ff;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    .day-button, .exercise-item {
+      background: #222;
+      color: white;
+      margin: 0.5rem 0;
+      padding: 1rem;
+      border-radius: 8px;
+      text-align: center;
+      cursor: pointer;
+    }
+    .hidden {
+      display: none;
+    }
+    .stat-box {
+      display: flex;
+      justify-content: space-between;
+      margin: 1rem 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="start" class="overlay" style="background-image: url('https://cdn-images.dzcdn.net/images/cover/0f1e00a5dd176aa9e762bff6932b429e/1900x1900-000000-80-0-0.jpg');">
+    <h1>Enter Your Hunter Details</h1>
+    <div class="input-section">
+      <input type="text" id="name" placeholder="Name" /> <br/><br/>
+      <input type="number" id="age" placeholder="Age" /> <br/><br/>
+      <input type="number" id="height" placeholder="Height (cm)" /> <br/><br/>
+      <input type="number" id="weight" placeholder="Weight (kg)" /> <br/><br/>
+      <button onclick="startGame()">Start Leveling Up</button>
+    </div>
+  </div>
+
+  <div id="home" class="overlay hidden" style="background-image: url('https://static0.gamerantimages.com/wordpress/wp-content/uploads/2024/05/solo-leveling-arise-gate-key-guide.jpg');">
+    <h2>Welcome, <span id="displayName"></span></h2>
+    <div class="stats-section">
+      <div class="stat-box"><span>Level:</span><span id="level">1</span></div>
+      <div class="stat-box"><span>EXP:</span><span id="exp">0</span></div>
+      <div class="stat-box"><span>Calories Burned:</span><span id="calories">0 kcal</span></div>
+      <div class="stat-box"><span>Fatigue:</span><span id="fatigue">0%</span></div>
+    </div>
+    <button onclick="showDays()">Start Workout</button>
+  </div>
+
+  <div id="days" class="overlay hidden" style="background-image: url('https://m.media-amazon.com/images/I/71e8AC3ZycS._UF894,1000_QL80_.jpg');">
+    <h2>Choose Your Day</h2>
+    <div class="days-section">
+      <div class="day-button" onclick="showExercises('Monday')">Monday</div>
+      <div class="day-button" onclick="showExercises('Tuesday')">Tuesday</div>
+      <div class="day-button" onclick="showExercises('Thursday')">Thursday</div>
+      <div class="day-button" onclick="showExercises('Friday')">Friday</div>
+      <div class="day-button" onclick="showExercises('Saturday')">Saturday</div>
+      <div class="day-button" onclick="showExercises('Sunday')">Sunday</div>
+    </div>
+  </div>
+
+  <div id="exercises" class="overlay hidden" style="background-image: url('https://cdna.artstation.com/p/assets/images/images/038/182/784/large/bier-schwarz-baruka-shadow-solo-leveling-2048.jpg?1622413188');">
+    <h2 id="dayTitle">Today's Workout</h2>
+    <div class="exercise-list" id="exerciseList"></div>
+    <button onclick="completeWorkout()">Finish Workout</button>
+  </div>
+
+  <script>
+    const workouts = {
+      Monday: ["15 Push-ups (3 sets)", "20 Squats (3 sets)", "30-sec Plank (3 sets)", "5 Burpees (3 sets)"],
+      Tuesday: ["20 Jumping Jacks (3 sets)", "15 Sit-ups (3 sets)", "Lunges (3x10)", "Wall Sit 30-sec (3 sets)"],
+      Thursday: ["Chin-ups (if bar) or 30 Arm Circles (3x)", "Jumping Squats (3x10)", "30-sec Plank (3x)", "10 Burpees (3 sets)"],
+      Friday: ["Push-ups (4x15)", "Squats (4x20)", "Plank (4x45 sec)", "Mountain Climbers (3x30 sec)"],
+      Saturday: ["Wide Push-ups (3x10)", "Leg Raises (3x15)", "Lunges (3x20)", "Crunches (3x25)"],
+      Sunday: ["Stretching Routine", "Toe Touches", "Butterfly Stretch", "Shoulder Rolls"]
+    };
+
+    let exp = 0, level = 1, calories = 0, fatigue = 0;
+    let userData = JSON.parse(localStorage.getItem('hunterData')) || null;
+
+    window.onload = function () {
+      if (userData) {
+        document.getElementById('displayName').innerText = userData.name;
+        document.getElementById('start').classList.add('hidden');
+        document.getElementById('home').classList.remove('hidden');
+      }
+    };
+
+    function startGame() {
+      const name = document.getElementById('name').value;
+      const age = document.getElementById('age').value;
+      const height = document.getElementById('height').value;
+      const weight = document.getElementById('weight').value;
+      userData = { name, age, height, weight };
+      localStorage.setItem('hunterData', JSON.stringify(userData));
+
+      document.getElementById('displayName').innerText = name;
+      document.getElementById('start').classList.add('hidden');
+      document.getElementById('home').classList.remove('hidden');
+    }
+
+    function showDays() {
+      document.getElementById('home').classList.add('hidden');
+      document.getElementById('days').classList.remove('hidden');
+    }
+
+    function showExercises(day) {
+      document.getElementById('dayTitle').innerText = day + "'s Workout";
+      const list = document.getElementById('exerciseList');
+      list.innerHTML = '';
+      workouts[day].forEach(ex => {
+        const div = document.createElement('div');
+        div.className = 'exercise-item';
+        div.innerText = ex;
+        div.onclick = () => {
+          div.style.background = 'green';
+          div.style.pointerEvents = 'none';
+          exp += 10;
+          calories += 5;
+          fatigue += 4;
+        };
+        list.appendChild(div);
+      });
+      document.getElementById('days').classList.add('hidden');
+      document.getElementById('exercises').classList.remove('hidden');
+    }
+
+    function completeWorkout() {
+      if (exp >= 100 * level) {
+        exp = 0;
+        level++;
+      }
+      document.getElementById('exp').innerText = exp;
+      document.getElementById('level').innerText = level;
+      document.getElementById('calories').innerText = calories + ' kcal';
+      document.getElementById('fatigue').innerText = fatigue + '%';
+
+      document.getElementById('exercises').classList.add('hidden');
+      document.getElementById('home').classList.remove('hidden');
+    }
+  </script>
+</body>
+</html>
